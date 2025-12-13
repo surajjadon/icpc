@@ -1,0 +1,29 @@
+{
+  "date": "2025-05-21",
+  "tasks": [
+    {
+      "title": "Math Problem A",
+      "link": "https://codeforces.com/contest/1999/problem/A",
+      "tags": [
+        "Math",
+        "800"
+      ]
+    },
+    {
+      "title": "Greedy Challenge",
+      "link": "https://codeforces.com/contest/1999/problem/B",
+      "tags": [
+        "Greedy",
+        "1200"
+      ]
+    },
+    {
+      "title": "Hard DP",
+      "link": "https://codeforces.com/contest/1999/problem/C",
+      "tags": [
+        "DP",
+        "1500"
+      ]
+    }
+  ]
+}
