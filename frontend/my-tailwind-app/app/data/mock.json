@@ -1,0 +1,88 @@
+{
+  "user": {
+    "name": "tourist",
+    "handle": "chokudai",
+    "streak": 12
+  },
+  "ladder": [
+    { "id": 1, "title": "AtCoder A", "status": "completed" },
+    { "id": 2, "title": "AtCoder B", "status": "completed" },
+    { "id": 3, "title": "CF 900", "status": "completed" },
+    { "id": 4, "title": "CF 1000", "status": "in-progress" },
+    { "id": 5, "title": "CF 1100", "status": "locked" },
+    { "id": 6, "title": "AtCoder C", "status": "locked" },
+    { "id": 7, "title": "CF 1200", "status": "locked" },
+    { "id": 8, "title": "CF 1300", "status": "locked" },
+    { "id": 9, "title": "AtCoder D", "status": "locked" },
+    { "id": 10, "title": "CF 1400", "status": "locked" }
+  ],
+  "dailyDose": [
+    {
+      "id": 1,
+      "platform": "Codeforces",
+      "title": "Problem A - Rating 1100",
+      "status": "solved",
+      "tags": ["Solved"]
+    },
+    {
+      "id": 2,
+      "platform": "AtCoder",
+      "title": "Problem B",
+      "status": "pending",
+      "tags": ["Beginner"]
+    },
+    {
+      "id": 3,
+      "platform": "Codeforces",
+      "title": "Problem C",
+      "status": "pending",
+      "tags": ["Challenge", "Rating 1300"]
+    }
+  ],
+  "chartData": [
+    { "date": "Nov 17", "official": 1205, "performance": 1090 },
+    { "date": "Nov 24", "official": 1208, "performance": 1180 },
+    { "date": "Dec 01", "official": 1210, "performance": 1150 },
+    { "date": "Dec 08", "official": 1215, "performance": 1180 },
+    { "date": "Dec 15", "official": 1218, "performance": 1120 },
+    { "date": "Dec 22", "official": 1220, "performance": 1160 },
+    { "date": "Dec 29", "official": 1222, "performance": 1150 },
+    { "date": "Jan 05", "official": 1222, "performance": 1240 },
+    { "date": "Jan 12", "official": 1223, "performance": 1180 },
+    { "date": "Jan 19", "official": 1225, "performance": 1120 },
+    { "date": "Jan 26", "official": 1225, "performance": 1250 },
+    { "date": "Feb 02", "official": 1225, "performance": 1260 },
+    { "date": "Feb 09", "official": 1220, "performance": 1200 }
+  ],
+  "contestHistory": [
+    {
+      "date": "2022-05-10",
+      "contest": "Codeforces: Problem A",
+      "platform": "Beginner",
+      "rank": "1st",
+      "change": "+250",
+      "level": "Level 2"
+    },
+    {
+      "date": "2022-03-07",
+      "contest": "Codeforces: Problem B",
+      "platform": "Beginner",
+      "rank": "3rd",
+      "change": "+250",
+      "level": "Level 1"
+    }
+  ],
+  "radarData": [
+    { "subject": "Geometry", "A": 80, "fullMark": 150 },
+    { "subject": "Strings", "A": 100, "fullMark": 150 },
+    { "subject": "Greedy", "A": 110, "fullMark": 150 },
+    { "subject": "Math", "A": 90, "fullMark": 150 },
+    { "subject": "Graphs", "A": 130, "fullMark": 150 },
+    { "subject": "CP", "A": 70, "fullMark": 150 }
+  ],
+  "stats": {
+    "totalSolved": 1240,
+    "nextMilestone": 1400,
+    "progress": 75
+  }
+}
