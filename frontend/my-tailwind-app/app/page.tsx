@@ -63,7 +63,7 @@ interface DashboardData {
 // 2. Fetch Function
 async function fetchData(cfHandle: string, acHandle: string): Promise<DashboardData | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     const url = `${baseUrl}/api/dashboard?cf=${cfHandle}&ac=${acHandle || ''}`;
     
     const response = await fetch(url);
