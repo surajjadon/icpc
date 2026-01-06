@@ -12,6 +12,7 @@ type Task = {
 };
 
 // Cached AtCoder data
+
 let atCoderProblemsCache: any[] | null = null;
 let atCoderDifficultyCache: any | null = null;
 
@@ -144,7 +145,7 @@ export default function DailyTaskBuilder() {
     try {
       const payload = { date, tasks };
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'; 
+      const baseUrl = 'http://localhost:5000'; 
       const url = `${baseUrl}/api/daily`
       const response = await fetch(url, {
         method: 'POST',

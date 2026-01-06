@@ -10,6 +10,8 @@ import DailyDose from "./components/dashboard/DailyDose";
 import PerformanceChart from "./components/dashboard/PerformanceChart";
 import TopicStrength from "./components/dashboard/TopicStrength";
 import TotalSolved from "./components/dashboard/TotalSolved";
+import GetDetailedAnalysis from "./components/dashboard/GetDetailedAnalysis";
+
 
 // 1. Define Data Interface
 interface DashboardData {
@@ -63,7 +65,7 @@ interface DashboardData {
 // 2. Fetch Function
 async function fetchData(cfHandle: string, acHandle: string): Promise<DashboardData | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    const baseUrl = "http://localhost:5000";
     const url = `${baseUrl}/api/dashboard?cf=${cfHandle}&ac=${acHandle || ''}`;
     
     const response = await fetch(url);
@@ -150,6 +152,7 @@ function DashboardContent() {
         <div className="col-span-12 lg:col-span-3 flex flex-col gap-6 h-full">
           <TopicStrength data={data.radarData} />
           <TotalSolved stats={data.stats} />
+          <GetDetailedAnalysis />
         </div>
 
       </div>

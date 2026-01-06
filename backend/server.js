@@ -13,6 +13,7 @@ app.use(express.json());
 // ==========================================
 // 1. MONGODB CONNECTION
 // ==========================================
+
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/cp-dashboard";
 
 mongoose.connect(MONGO_URI)
@@ -64,6 +65,7 @@ app.post('/api/daily', async (req, res) => {
 // ==========================================
 // 3. COMBINED DASHBOARD API (FIXED)
 // ==========================================
+
 app.get('/api/dashboard', async (req, res) => {
     try {
         const cfHandle = req.query.cf;
@@ -90,10 +92,11 @@ app.get('/api/dashboard', async (req, res) => {
         const cfStatusRes = results[1];
         const cfRatingRes = results[2];
         const acStatusRes = acHandle ? results[3] : { data: [] };
-
+        
         // --- DATA STORES ---
         // We use a Set because it ensures uniqueness. 
         // If a problem is added once (Accepted), it stays there, regardless of other failures.
+        
         const solvedIDs = new Set();
         const activityDates = new Set();
         const tagCounts = {};
@@ -103,6 +106,7 @@ app.get('/api/dashboard', async (req, res) => {
         // -------------------------------------------------------
         // 1. Process Codeforces (The Fix for Multiple Submissions)
         // -------------------------------------------------------
+
         if (cfStatusRes.data.status === 'OK') {
             cfStatusRes.data.result.forEach(sub => {
                 // Only process if Verdict is OK. We ignore fails entirely.
@@ -132,6 +136,7 @@ app.get('/api/dashboard', async (req, res) => {
         // -------------------------------------------------------
         // 2. Process AtCoder
         // -------------------------------------------------------
+
         if (acHandle && Array.isArray(acStatusRes.data)) {
             acStatusRes.data.forEach(sub => {
                 if (sub.result === 'AC') {
@@ -173,6 +178,7 @@ app.get('/api/dashboard', async (req, res) => {
         // -------------------------------------------------------
         // 4. Daily Dose Processing (The Link Matching Fix)
         // -------------------------------------------------------
+
         const allDailyEntries = await DailyTask.find().sort({ date: -1 });
         let processedDailyDose = [];
         let globalIndex = 1;
@@ -187,6 +193,7 @@ app.get('/api/dashboard', async (req, res) => {
                 // Regex handles: 
                 // 1. https://codeforces.com/contest/1234/problem/C
                 // 2. https://codeforces.com/problemset/problem/1234/C
+
                 const cfMatch = task.link.match(/(?:contest|gym|problemset\/problem)\/(\d+)(?:\/problem\/|\/)([A-Z0-9]+)/i);
                 
                 if (cfMatch) {
@@ -225,6 +232,7 @@ app.get('/api/dashboard', async (req, res) => {
         // -------------------------------------------------------
         // LADDER CONFIGURATION 
         // -------------------------------------------------------
+
         const ladderLevels = [
             { id: 1, title: "AtCoder A", req: 50, type: "AC", index: "A" },
             { id: 2, title: "AtCoder B", req: 50, type: "AC", index: "B" },
@@ -324,6 +332,176 @@ app.get('/api/dashboard', async (req, res) => {
         res.status(500).json({ error: "Server Error" });
     }
 });
+
+// ==========================================
+// 4. DETAILED ANALYSIS API (DATE RANGE)
+// ==========================================
+// Usage:
+// /api/cf/detailed-analysis?handle=tourist&start=2024-01-01&end=2024-01-31
+
+app.get('/api/cf/detailed-analysis', async (req, res) => {
+    try {
+        const { handle, start, end } = req.query;
+
+        if (!handle || !start || !end) {
+            return res.status(400).json({ error: "handle, start and end are required" });
+        }
+
+        const startTs = new Date(`${start}T00:00:00Z`).getTime() / 1000;
+        const endTs = new Date(`${end}T23:59:59Z`).getTime() / 1000;
+
+        // -----------------------------
+        // Fetch Codeforces data
+        // -----------------------------
+        const [statusRes, ratingRes] = await Promise.all([
+            axios.get(`https://codeforces.com/api/user.status?handle=${handle}`),
+            axios.get(`https://codeforces.com/api/user.rating?handle=${handle}`)
+        ]);
+
+        if (statusRes.data.status !== "OK") {
+            return res.status(500).json({ error: "Failed to fetch submissions" });
+        }
+
+        const submissions = statusRes.data.result;
+
+        // -----------------------------
+        // Solved / Attempted Problems
+        // -----------------------------
+        const solvedMap = new Map();
+        const attemptedMap = new Map();
+
+        // Also build a solved CF Set (for daily task matching)
+        const solvedCFSet = new Set();
+
+        submissions.forEach(sub => {
+            if (
+                sub.creationTimeSeconds < startTs ||
+                sub.creationTimeSeconds > endTs ||
+                !sub.problem ||
+                !sub.problem.contestId
+            ) return;
+
+            const key = `${sub.problem.contestId}-${sub.problem.index}`;
+
+            attemptedMap.set(key, sub.problem);
+
+            if (sub.verdict === "OK") {
+                solvedMap.set(key, sub.problem);
+                solvedCFSet.add(`CF-${key}`.toUpperCase());
+            }
+        });
+
+        const solvedProblems = [...solvedMap.values()];
+        const pendingProblems = [...attemptedMap.values()].filter(
+            p => !solvedMap.has(`${p.contestId}-${p.index}`)
+        );
+
+        // -----------------------------
+        // Rating Logic
+        // -----------------------------
+        
+        const ratingChanges = ratingRes.data.result.filter(
+            r =>
+                r.ratingUpdateTimeSeconds >= startTs &&
+                r.ratingUpdateTimeSeconds <= endTs
+        );
+
+        const ratingChange = ratingChanges.reduce(
+            (sum, r) => sum + (r.newRating - r.oldRating),
+            0
+        );
+
+        // -----------------------------
+        // Daily Task Analysis
+        // -----------------------------
+
+        const dailyEntries = await DailyTask.find({
+            date: { $gte: start, $lte: end }
+        });
+
+        const dailySolved = [];
+        const dailyUnsolved = [];
+
+        dailyEntries.forEach(entry => {
+            entry.tasks.forEach(task => {
+                if (!task.link) return;
+
+                // Match Codeforces problem link
+                const cfMatch = task.link.match(
+                    /(?:contest|problemset\/problem)\/(\d+)\/([A-Z0-9]+)/i
+                );
+
+                if (!cfMatch) return;
+
+                const contestId = Number(cfMatch[1]);
+                const index = cfMatch[2].toUpperCase();
+                const cfKey = `CF-${contestId}-${index}`;
+
+                // Try to find full problem info from solved/attempted maps
+                const problem =
+                    solvedMap.get(`${contestId}-${index}`) ||
+                    attemptedMap.get(`${contestId}-${index}`);
+
+                const payload = {
+                    contestId,
+                    index,
+                    name: problem?.name || task.title,
+                    rating: problem?.rating || "",
+                    tags: problem?.tags || task.tags || []
+                };
+
+                if (solvedCFSet.has(cfKey)) {
+                    dailySolved.push(payload);
+                } else {
+                    dailyUnsolved.push(payload);
+                }
+            });
+        });
+
+        // -----------------------------
+        // Final Response
+        // -----------------------------
+        res.json({
+            handle,
+            period: { start, end },
+            summary: {
+                solvedCount: solvedProblems.length,
+                pendingCount: pendingProblems.length,
+                contestCount: ratingChanges.length,
+                ratingChange,
+                dailyTasksSolvedCount: dailySolved.length,
+                dailyTasksUnsolvedCount: dailyUnsolved.length
+            },
+            solvedProblems: solvedProblems.map(p => ({
+                contestId: p.contestId,
+                index: p.index,
+                name: p.name,
+                rating: p.rating || "",
+                tags: p.tags || []
+            })),
+            pendingProblems: pendingProblems.map(p => ({
+                contestId: p.contestId,
+                index: p.index,
+                name: p.name
+            })),
+            dailyTasksSolved: dailySolved,
+            dailyTasksUnsolved: dailyUnsolved,
+            contests: ratingChanges.map(r => ({
+                contestId: r.contestId,
+                contestName: r.contestName,
+                oldRating: r.oldRating,
+                newRating: r.newRating,
+                delta: r.newRating - r.oldRating
+            }))
+        });
+
+    } catch (err) {
+        console.error("Detailed Analysis Error:", err.message);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
+
 
 app.listen(PORT, () => {
     console.log(`✅ Server running at http://localhost:${PORT}`);
