@@ -145,7 +145,7 @@ export default function DailyTaskBuilder() {
     try {
       const payload = { date, tasks };
 
-      const baseUrl = 'http://localhost:5000'; 
+      const baseUrl = 'https://143.244.138.45.sslip.io'; 
       const url = `${baseUrl}/api/daily`
       const response = await fetch(url, {
         method: 'POST',
